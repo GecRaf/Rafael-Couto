@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../so_2019_2020"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"medico.h": "c",
+			"balcao.h": "c",
+			"cliente.h": "c"
+		}
+	}
+}

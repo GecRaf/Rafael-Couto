@@ -11,7 +11,7 @@ void quit()
 
 void utentes()
 {
-
+    
 }
 
 void especialistas()
@@ -74,7 +74,9 @@ void classificador(const char *sintomas)
     fclose(classificador);
     fgets(classificacao, 100, stdout);
     //Falta implementar stdin e stdout
-    return classificacao;*/
+    return classificacao;
+    pila
+    */
     const char *classificacao[40];
     int p[2], r[2];
     write(p[1], sintomas, strlen(sintomas));

@@ -19,6 +19,7 @@
 //#define CLIENTE_FIFO "/tmp/cliente_%d_fifo"	\\ Por implementar!
 //#define MEDICO_FIFO "/tmp/medico_%d_fifo"	\\ Por implementar!
 
+void iniciaClassificador();
 void classificador(const char *sintomas);
 char comandos();
 

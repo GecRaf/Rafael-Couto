@@ -39,18 +39,8 @@ void encerra()
 
 }
 
-void classificador(const char *sintomas)
+void iniciaClassificador()
 {
-    /*char classificacao[30];
-
-    const char *comando = "./classificador";
-    execvp(comando, NULL);
-    fgets(sintomas, 100, stdin);
-    fclose(classificador);
-    fgets(classificacao, 100, stdout);
-    //Falta implementar stdin e stdout
-    return classificacao;*/
-    char classificacao;
     int estado, num;
     int p[2], r[2];
 
@@ -72,10 +62,25 @@ void classificador(const char *sintomas)
     close(p[0]);
     close(r[1]);
 
-    write(p[1], sintomas, strlen(sintomas));
-    read(r[0], classificacao, strlen(classificacao));
+}
 
-    printf("%c", classificacao);
+void classificador(const char *sintomas)
+{
+    /*char classificacao[30];
+
+    const char *comando = "./classificador";
+    execvp(comando, NULL);
+    fgets(sintomas, 100, stdin);
+    fclose(classificador);
+    fgets(classificacao, 100, stdout);
+    //Falta implementar stdin e stdout
+    return classificacao;*/
+    const char *classificacao[40];
+    int p[2], r[2];
+    write(p[1], sintomas, strlen(sintomas));
+    read(r[1], classificacao, strlen(classificacao));
+
+    printf("%s", classificacao);
     printf("\n");
 }
 

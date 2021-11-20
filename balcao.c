@@ -18,7 +18,7 @@ int main(int argc, char *argv)
     //comandos();
 
     const char *sintomas = "dor de cabeca";
-
+    iniciaClassificador();
     classificador(sintomas);
 
     return 0;

@@ -3,6 +3,17 @@
 
 int main(int argc, char *argv)
 {
+    char* maxClientesChar = getenv("MAXCLIENTES");
+    int maxClientes = atoi(maxClientesChar);
+
+    char* maxMedicosChar = getenv("MAXMEDICOS");
+    int maxMedicos = atoi(maxMedicosChar);
+    
+    char* maxEspecialidadesChar = getenv("MAXESPECIALIDADES");
+    int maxEspecialidades = atoi(maxEspecialidadesChar);
+
+    char* maxLugaresFilaChar = getenv("MAXLUGARESFILA");
+    int maxLugaresFila = atoi(maxLugaresFilaChar);
 
     /*if(0 == system("pidof -x balcao > /dev/null")) {
         printf("O processo balcao ja esta em execucao!\n");

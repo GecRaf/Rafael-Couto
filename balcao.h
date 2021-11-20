@@ -23,4 +23,9 @@ void iniciaClassificador();
 void classificador(const char *sintomas);
 char comandos();
 
+typedef struct administrador admin;
+struct {
+	char nome[20];
+}administrador;
+
 #endif

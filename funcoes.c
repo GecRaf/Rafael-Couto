@@ -39,9 +39,9 @@ void encerra()
 
 }
 
-char classificador(const char *sintomas)
+void classificador(const char *sintomas)
 {
-    char classificacao[30];
+    /*char classificacao[30];
 
     const char *comando = "./classificador";
     execvp(comando, NULL);
@@ -49,7 +49,34 @@ char classificador(const char *sintomas)
     fclose(classificador);
     fgets(classificacao, 100, stdout);
     //Falta implementar stdin e stdout
-    return classificacao;
+    return classificacao;*/
+    char classificacao;
+    int estado, num;
+    int p[2], r[2];
+
+    pipe(p);
+    pipe(r);
+    int filho = fork();
+    if (filho == 0) {
+        close(0);//FECHAR ACESSO AO TECLADO
+        dup(p[0]);//DUPLICAR P[0] NA PRIMEIRA POSICAO DISPONIVEL
+        close(p[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
+        close(p[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
+
+        close(1);//FECHAR ACESSO AO MONITOR
+        dup(r[1]);//DUPLICAR P[1] NA PRIMEIRA POSICAO DISPONIVEL
+        close(r[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
+        close(r[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
+        execl("classificador", "classificador",NULL);
+    }
+    close(p[0]);
+    close(r[1]);
+
+    write(p[1], sintomas, strlen(sintomas));
+    read(r[0], classificacao, strlen(classificacao));
+
+    printf("%c", classificacao);
+    printf("\n");
 }
 
 void shutdown(int pid)
@@ -63,11 +90,12 @@ void shutdown(int pid)
 char comandos()
 {
     char comando[50], cmd[15], argum[30];
+    int pid = getpid();
 
     while (1)
     {
 
-        printf("[%5d][BALCAO] COMANDO:\n");
+        printf("[%5d]COMANDO: ", pid);
         scanf("%49[^\n]", comando);
         sscanf(comando, "%14s %29[^\n]", cmd, argum);
 

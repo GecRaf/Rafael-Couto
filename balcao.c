@@ -15,11 +15,11 @@ int main(int argc, char *argv)
 
     printf("SISTEMA MEDICALSO INICIADO\n");
 
-    comandos();
+    //comandos();
 
     const char *sintomas = "dor de cabeca";
 
-    //classificador(sintomas);
+    classificador(sintomas);
 
     return 0;
 }

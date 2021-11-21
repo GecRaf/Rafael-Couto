@@ -39,51 +39,39 @@ void encerra()
 
 }
 
-void iniciaClassificador()
-{
+void classificador(const char *sintomas)
+{ 
+    int e[2], r[2]; //escreve || recebe
+    int filho;
     int estado, num;
-    int p[2], r[2];
-
-    pipe(p);
-    pipe(r);
-    int filho = fork();
+    
+    pipe(e);    //pipe para classificador
+    pipe(r);    //pipe de classificador
+    filho = fork();
     if (filho == 0) {
-        close(0);//FECHAR ACESSO AO TECLADO
-        dup(p[0]);//DUPLICAR P[0] NA PRIMEIRA POSICAO DISPONIVEL
-        close(p[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
-        close(p[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
+        close(STDIN_FILENO);
+        dup(e[0]);  //duplica ponta de leitura
+        close(e[0]);    //fecha extremidade de leitura
+        close(e[1]);    //fecha extremidade de escrita
 
-        close(1);//FECHAR ACESSO AO MONITOR
-        dup(r[1]);//DUPLICAR P[1] NA PRIMEIRA POSICAO DISPONIVEL
-        close(r[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
-        close(r[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
+        close(STDOUT_FILENO);
+        dup(r[1]);  //duplica ponta de escrita
+        close(r[0]);    //fecha extremidade de leitura
+        close(r[1]);    //fecha extremidade de escrita
         execl("classificador", "classificador",NULL);
     }
-    close(p[0]);
+    close(e[0]);
     close(r[1]);
 
-}
+    char classificacao[31] = "";
+    write(e[1], sintomas, 20);
+    write(e[1], "\n", 1);
+    read(r[0], classificacao, 30);
 
-void classificador(const char *sintomas)
-{
-    /*char classificacao[30];
+    printf("Classificacao: %s", classificacao);
 
-    const char *comando = "./classificador";
-    execvp(comando, NULL);
-    fgets(sintomas, 100, stdin);
-    fclose(classificador);
-    fgets(classificacao, 100, stdout);
-    //Falta implementar stdin e stdout
-    return classificacao;
-    pila
-    */
-    const char *classificacao[40];
-    int p[2], r[2];
-    write(p[1], sintomas, strlen(sintomas));
-    read(r[1], classificacao, strlen(classificacao));
-
-    printf("%s", classificacao);
-    printf("\n");
+    close(r[0]);
+    kill(filho, SIGUSR2);
 }
 
 void shutdown(int pid)

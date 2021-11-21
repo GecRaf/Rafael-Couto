@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv)
 {
-    char* maxClientesChar = getenv("MAXCLIENTES");
+    /*char* maxClientesChar = getenv("MAXCLIENTES");
     int maxClientes = atoi(maxClientesChar);
 
     char* maxMedicosChar = getenv("MAXMEDICOS");
@@ -13,7 +13,7 @@ int main(int argc, char *argv)
     int maxEspecialidades = atoi(maxEspecialidadesChar);
 
     char* maxLugaresFilaChar = getenv("MAXLUGARESFILA");
-    int maxLugaresFila = atoi(maxLugaresFilaChar);
+    int maxLugaresFila = atoi(maxLugaresFilaChar);*/
 
     /*if(0 == system("pidof -x balcao > /dev/null")) {
         printf("O processo balcao ja esta em execucao!\n");
@@ -22,14 +22,13 @@ int main(int argc, char *argv)
     if(1 == system("pidof -x balcao > /dev/null")) {
        printf("O processo balcao nao esta em execucao!\n");
       //A process having name PROCESS is NOT running.
-   }*/
+   }*/// Por implementar
 
     printf("SISTEMA MEDICALSO INICIADO\n");
 
     //comandos();
 
-    const char *sintomas = "dor de cabeca";
-    iniciaClassificador();
+    const char *sintomas = "dor de cabeca"; //teste sintomas
     classificador(sintomas);
 
     return 0;

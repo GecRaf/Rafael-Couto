@@ -10,5 +10,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
+typedef struct medico {
+	char nome[20];
+	char especialidade;
+}medico;
 
 #endif

@@ -18,8 +18,8 @@ char criaUtente();
 char fichaUtente(char *especialidade, char *prioridade, int nUtentes, int nEspecialistas);
 char respondeMedico();
 
-typedef struct cliente clt;
-struct {
+
+typedef struct cliente {
 	char nome[20];
 	char sintomas;
 }cliente;

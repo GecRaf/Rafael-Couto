@@ -25,6 +25,8 @@ char comandos();
 typedef struct administrador admin;
 struct {
 	char nome[20];
+	cliente clt;
+	medico med;
 }administrador;
 
 #endif

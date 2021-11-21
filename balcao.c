@@ -13,7 +13,7 @@ int main(int argc, char *argv)
     int maxEspecialidades = atoi(maxEspecialidadesChar);
 
     char* maxLugaresFilaChar = getenv("MAXLUGARESFILA");
-    int maxLugaresFila = atoi(maxLugaresFilaChar);*/
+    int maxLugaresFila = atoi(maxLugaresFilaChar);*/ //Segmentation fault code
 
     /*if(0 == system("pidof -x balcao > /dev/null")) {
         printf("O processo balcao ja esta em execucao!\n");

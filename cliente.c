@@ -1,15 +1,85 @@
 #include "cliente.h"
 
+void handler_sigalrm(int s, siginfo_t *i, void *v)
+{
+    unlink(CLIENTE_FIFO);
+    unlink(CLIENTE_FIFO_FINAL);
+    printf("\nAdeus\n");
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
-    char str[40];
-    int aux = 1, son;
-    int fd[2];
-    int pid = getpid();
+    struct sigaction sa;
+    sa.sa_sigaction = handler_sigalrm;
+    sa.sa_flags = SA_RESTART | SA_SIGINFO;
+    sigaction(SIGINT, &sa, NULL);
+    dataMSGCTL pergunta;
+    dataRPLCTL resposta;
+    cliente ctl;
+    int fd_envio, fd_resposta;
+    pergunta.pid = getpid();
 
-    printf("[%5d]COMANDO: ", pid);
+    sprintf(CLIENTE_FIFO_FINAL, CLIENTE_FIFO, getpid());
+    if (mkfifo(CLIENTE_FIFO_FINAL, 0666) == -1)
+    {
+        if (errno == EEXIST)
+        {
+            printf("\nFIFO ja existe!\n");
+        }
+        printf("\nErro ao abrir fifo!\n");
+        return 1;
+    }
+
+    // printf("Cliente [%5d]\n", pergunta.pid); //Maybe not necessary
+    printf("\nBem-vindo ao sistema MEDICALso!\n");
+    printf("Nome de Utente: ");
+    fflush(stdin);
+    fgets(ctl.nome,100, stdin);
+    //scanf("%s100[^\n]", ctl.nome);
+    printf("\n");
+    fflush(stdin);
+    printf("Sintomas: ");
+    fgets(ctl.sintomas,100, stdin);
+    //scanf("%s100[^\n]", ctl.sintomas);
+    printf("\n");
+
+    do
+    {
+        fflush(stdin);
+        printf("\n");
+        printf("Cliente [%5d] - Mensagem: ", pergunta.pid);
+        fgets(pergunta.msg,100, stdin);
+        //scanf("%s100[^\n]", pergunta.msg);
+        if (strcmp(pergunta.msg, "adeus") != 0)
+        {
+            fd_envio = open(SERVER_FIFO, O_WRONLY);
+            int size = write(fd_envio, &pergunta, sizeof(pergunta));
+            close(fd_envio);
+            fd_resposta = open(CLIENTE_FIFO_FINAL, O_RDONLY);
+            int size2 = read(fd_resposta, &resposta, sizeof(resposta));
+            if (size2 > 0)
+            {
+                close(fd_resposta);
+                printf("\nResposta: %s\n", resposta.res); //%s?
+            }  
+        }
+        else
+        {
+            fd_envio = open(SERVER_FIFO, O_WRONLY);
+            int size = write(fd_envio, &pergunta, sizeof(pergunta));
+            close(fd_envio);
+            unlink(CLIENTE_FIFO_FINAL);
+            exit(1); // como dar unlink aos dois fifos com o encerraServidor
+        }
+
+    } while (1);
+
+    unlink(CLIENTE_FIFO_FINAL);
+
+    /*printf("[%5d]COMANDO: ", pergunta.pid);
     fgets(str, 100, stdin);
-    
+
     while (!strcmp(str, "adeus"))
     {
         if (pipe(fd) == -1)
@@ -48,49 +118,11 @@ int main(int argc, char *argv[])
         }
     }
     printf("Adeus!\n");
-    exit(1);
-    //Falta implementar fork e exec para comunicacao entre medico e cliente
-    /*if(argc < 3)
-    {
-        printf("\n\n Faltam parametros \n\n");
-        exit(1);
-    }*/
+    exit(1);*/
 
-    /*while (aux) //Para rever
-    {
-        if (id == 0)
-        {
-            close(fd[0]);
-            printf(" [%5d]Resposta: ", pid);
-            fflush(stdout);
-            scanf("%s", str);
-            if(write(fd[1], &str, sizeof(str)) == -1) {return 1;}
-            close(fd[1]);
-            if (strcmp(str, "adeus") != 0)
-            {
-                son = fork();
-                if (son == 0)
-                {
-                    pid = getpid();
-                }
-            }
-            else
-            {
-                int strChild;
-                aux = 0;
-                close(fd[1]);
-                if(read(fd[0], &strChild, sizeof(strChild)) == -1){return 2;}
-                close(fd[0]);
-            }
-        }
-    }*/
-
-    //fichaUtente(especialidade, prioridade, nUtentes, nEspecialistas);
-    criaUtente();
-    respondeMedico();
+    // fichaUtente(especialidade, prioridade, nUtentes, nEspecialistas);
+    // criaUtente();
+    // respondeMedico();
 
     return 0;
 }
-
-
-

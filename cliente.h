@@ -10,18 +10,42 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stddef.h>
+#include <errno.h>
 
-extern char nome;
-extern char* perguntaResposta;
+#define SERVER_FIFO "SERVIDOR"
+#define CLIENTE_FIFO "CLIENTE[%d]"
+#define MEDICO_FIFO "MEDICO [%d]"
 
-char criaUtente();
-char fichaUtente(char *especialidade, char *prioridade, int nUtentes, int nEspecialistas);
-char respondeMedico();
+char CLIENTE_FIFO_FINAL [100];
 
-
-typedef struct cliente {
-	char nome[20];
-	char sintomas;
+typedef struct
+{
+	char nome[100];
+	char sintomas[100];
 }cliente;
+
+typedef struct 
+{
+	pid_t pid;
+	char msg[100];
+}dataMSGCTL;
+
+typedef struct 
+{
+	char res[100];
+}dataRPLCTL;
+
+// Codigo Meta 1
+
+void encerraServidor(int fd, char *nameFIFO)
+{
+    printf("Adeus!\n");
+    close(fd);
+    unlink(nameFIFO);
+    exit(1);
+}
+//char criaUtente();
+//char fichaUtente(char *especialidade, char *prioridade, int nUtentes, int nEspecialistas);
+//char respondeMedico();
 
 #endif

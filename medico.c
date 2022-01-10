@@ -1,63 +1,81 @@
 #include "medico.h"
 
-int main (int argc, char *argv[]){
-
-    char str[40];
-    int aux = 1, pid, son;
-    int fd[2];
-
-    if(argc < 3)
-    {
-        printf("\n\n Faltam parametros \n\n");
-        exit(1);
-    }
-    // Mesma situacao do cliente.c 
-    if(pipe(fd) == -1)
-    {
-        printf("\n\n Nao foi possivel abrir o pipe\n\n");
-        exit(2);
-    }
-
-    pid = fork();
-
-    if(pid == -1)
-    {
-        printf("\n\nErro ao criar o filho\n\n");
-        exit(3);
-    }
-    
-    if(pid > 0)
-    {
-        close(STDIN_FILENO);
-        dup(fd[0]);
-        close(fd[0]);
-        close(fd[1]);
-        execl(argv[2], argv[2], NULL);
-    }
-
-    if(pid == 0)// processo filho
-    {
-        close(STDOUT_FILENO);
-        dup(fd[1]);
-        close(fd[1]);
-        close(fd[0]);
-        execl(argv[1], argv[1], NULL);
-    }
-    return 0;
+    void handler_sigalrm(int s, siginfo_t *i, void *v)
+{
+    unlink(MEDICO_FIFO);
+    unlink(MEDICO_FIFO_FINAL);
+    printf("\nAdeus\n");
+    exit(1);
 }
 
-char respondeUtente()
+int main(int argc, char *argv[])
 {
+    struct sigaction sa;
+    sa.sa_sigaction = handler_sigalrm;
+    sa.sa_flags = SA_RESTART | SA_SIGINFO;
+    sigaction(SIGINT, &sa, NULL);
+    dataMSGMDC pergunta;
+    dataRPLMDC resposta;
+    medico mdc;
+    int fd_envio, fd_resposta;
+    pergunta.pid = getpid();
 
-    char perguntaResposta;
-
-    printf("Introduza a sua pergunta:\n");
-    scanf("%c", &perguntaResposta);
-
-    if (!strcmp(&perguntaResposta, "adeus"))
+    sprintf(MEDICO_FIFO_FINAL, MEDICO_FIFO, getpid());
+    if (mkfifo(MEDICO_FIFO_FINAL, 0666) == -1)
     {
-        return 0;
+        if (errno == EEXIST)
+        {
+            printf("\nFIFO ja existe!\n");
+        }
+        printf("\nErro ao abrir fifo!\n");
+        return 1;
     }
 
-    return perguntaResposta;
+    // printf("Cliente [%5d]\n", pergunta.pid); //Maybe not necessary
+    printf("\nBem-vindo ao sistema MEDICALso!\n");
+    printf("Nome de Medico: ");
+    fflush(stdin);
+    fgets(mdc.nome,100, stdin);
+    //scanf("%s100[^\n]", ctl.nome);
+    printf("\n");
+    fflush(stdin);
+    printf("Especialidade: ");
+    fgets(mdc.especialidade,100, stdin);
+    //scanf("%s100[^\n]", ctl.sintomas);
+    printf("\n");
+
+    do
+    {
+        fflush(stdin);
+        printf("\n");
+        printf("Medico [%5d] - Mensagem: ", pergunta.pid);
+        fgets(pergunta.msg,100, stdin);
+        //scanf("%s100[^\n]", pergunta.msg);
+        if (strcmp(pergunta.msg, "adeus") != 0)
+        {
+            fd_envio = open(SERVER_FIFO, O_WRONLY);
+            int size = write(fd_envio, &pergunta, sizeof(pergunta));
+            close(fd_envio);
+            fd_resposta = open(MEDICO_FIFO_FINAL, O_RDONLY);
+            int size2 = read(fd_resposta, &resposta, sizeof(resposta));
+            if (size2 > 0)
+            {
+                close(fd_resposta);
+                printf("\nResposta: %s\n", resposta.res); //%s?
+            }  
+        }
+        else
+        {
+            fd_envio = open(SERVER_FIFO, O_WRONLY);
+            int size = write(fd_envio, &pergunta, sizeof(pergunta));
+            close(fd_envio);
+            unlink(MEDICO_FIFO_FINAL);
+            exit(1); // como dar unlink aos dois fifos com o encerraServidor
+        }
+
+    } while (1);
+
+    unlink(MEDICO_FIFO_FINAL);
+
+    return 0;
 }

@@ -34,7 +34,15 @@ void freq()
 
 }
 
-void encerra()
+void encerraServidor(int fd, char *nameFIFO)
+{
+    printf("Adeus!\n");
+    close(fd);
+    unlink(nameFIFO);
+    exit(1);
+}
+
+void encerraSistema()
 {
 
 }
@@ -82,7 +90,7 @@ void shutdown(int pid)
     sleep(3);
 }
 
-char comandos()
+/*char comandos()
 {
     char comando[50], cmd[15], argum[30];
     int pid = getpid();
@@ -127,7 +135,7 @@ char comandos()
         else if (strcmp(cmd, "encerra") == 0)
         {
             signal(SIGALRM, shutdown);
-            encerra();//Necessário avisar os clientes, médicos e classificador!
+            encerraSistema();//Necessário avisar os clientes, médicos e classificador!
             printf("SISTEMA MEDICALSO TERMINADO\n");
         }
 
@@ -144,12 +152,12 @@ char criaUtente()
     printf("Introduza o seu nome e o(s) seu(s) sintomas (separado por espaços):\n");
     scanf("%c", &utente);
 
-    /*if(!strcmp(&nome,"ficheirocomosnomes")){
+    if(!strcmp(&nome,"ficheirocomosnomes")){
 		printf("Nome ja existente! Tente outro");
 
 		printf("Introduza o seu nome:\n");
         	scanf("%c", &nome);
-	}*/
+	}
     //Isto não é código para estúpidos, não esperamos que o user meta o mesmo nome 2x
 
     if (!strcmp(&utente, "adeus"))
@@ -183,3 +191,4 @@ char fichaUtente(char *especialidade, char *prioridade, int nUtentes, int nEspec
     }
     return 0;
 } // Recebe os parâmetros do balcao.c
+*/

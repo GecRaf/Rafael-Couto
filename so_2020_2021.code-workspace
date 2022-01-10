@@ -4,14 +4,14 @@
 			"path": "."
 		},
 		{
-			"path": "../so_2019_2020"
+			"path": "../aulasSO"
 		}
 	],
 	"settings": {
 		"files.associations": {
-			"medico.h": "c",
 			"balcao.h": "c",
-			"cliente.h": "c"
+			"fcntl.h": "c",
+			"stat.h": "c"
 		}
 	}
 }

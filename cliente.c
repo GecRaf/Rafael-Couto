@@ -14,14 +14,14 @@ int main(int argc, char *argv[])
     sa.sa_sigaction = handler_sigalrm;
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
     sigaction(SIGINT, &sa, NULL);
-    dataMSGCTL pergunta;
-    dataRPLCTL resposta;
+    dataMSG mensagem;
     cliente ctl;
+    administrador adm;
     int fd_envio, fd_resposta;
-    pergunta.pid = getpid();
+    mensagem.pid = getpid();
 
-    sprintf(CLIENTE_FIFO_FINAL, CLIENTE_FIFO, getpid());
-    if (mkfifo(CLIENTE_FIFO_FINAL, 0666) == -1)
+    sprintf(ctl.CLIENTE_FIFO_FINAL, CLIENTE_FIFO, getpid());
+    if (mkfifo(ctl.CLIENTE_FIFO_FINAL, 0666) == -1)
     {
         if (errno == EEXIST)
         {
@@ -31,98 +31,43 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // printf("Cliente [%5d]\n", pergunta.pid); //Maybe not necessary
     printf("\nBem-vindo ao sistema MEDICALso!\n");
     printf("Nome de Utente: ");
     fflush(stdin);
-    fgets(ctl.nome,100, stdin);
-    //scanf("%s100[^\n]", ctl.nome);
+    fgets(ctl.nome, 100, stdin);
     printf("\n");
     fflush(stdin);
     printf("Sintomas: ");
-    fgets(ctl.sintomas,100, stdin);
-    //scanf("%s100[^\n]", ctl.sintomas);
+    fgets(ctl.sintomas, 100, stdin);
     printf("\n");
+
+    adm.userType = true;
+    adm.clt = ctl;
+
+    int fd_balcao = open(SERVER_FIFO, O_WRONLY);
+    int size = write(fd_balcao, &adm, sizeof(adm));
 
     do
     {
+        fd_resposta = open(ctl.CLIENTE_FIFO_FINAL, O_RDONLY);
+        int size2 = read(fd_resposta, &mensagem, sizeof(mensagem));
+        close(fd_envio);
         fflush(stdin);
         printf("\n");
-        printf("Cliente [%5d] - Mensagem: ", pergunta.pid);
-        fgets(pergunta.msg,100, stdin);
-        //scanf("%s100[^\n]", pergunta.msg);
-        if (strcmp(pergunta.msg, "adeus") != 0)
+        printf("Cliente [%5d] - Mensagem: ", mensagem.pid);
+        fgets(mensagem.msg, 100, stdin);
+        if (strcmp(mensagem.msg, "adeus") == 0)
+            break;
+        fd_envio = open(ctl.CLIENTE_FIFO_FINAL, O_WRONLY);
+        int size = write(fd_envio, &mensagem, sizeof(mensagem));
+        if (size2 > 0)
         {
-            fd_envio = open(SERVER_FIFO, O_WRONLY);
-            int size = write(fd_envio, &pergunta, sizeof(pergunta));
-            close(fd_envio);
-            fd_resposta = open(CLIENTE_FIFO_FINAL, O_RDONLY);
-            int size2 = read(fd_resposta, &resposta, sizeof(resposta));
-            if (size2 > 0)
-            {
-                close(fd_resposta);
-                printf("\nResposta: %s\n", resposta.res); //%s?
-            }  
+            close(fd_resposta);
+            printf("\nResposta: %s\n", mensagem.msg);
         }
-        else
-        {
-            fd_envio = open(SERVER_FIFO, O_WRONLY);
-            int size = write(fd_envio, &pergunta, sizeof(pergunta));
-            close(fd_envio);
-            unlink(CLIENTE_FIFO_FINAL);
-            exit(1); // como dar unlink aos dois fifos com o encerraServidor
-        }
-
     } while (1);
 
+    close(fd_envio);
     unlink(CLIENTE_FIFO_FINAL);
-
-    /*printf("[%5d]COMANDO: ", pergunta.pid);
-    fgets(str, 100, stdin);
-
-    while (!strcmp(str, "adeus"))
-    {
-        if (pipe(fd) == -1)
-        {
-            printf("\n\n Nao foi possivel abrir o pipe\n\n");
-            exit(2);
-        }
-
-        pid = fork();
-
-        if (pid == -1)
-        {
-            printf("\n\nErro ao criar o filho\n\n");
-            exit(3);
-        }
-
-        if (pid > 0)
-        {
-            pipe(fd[1]);
-            close(STDOUT_FILENO);
-            dup(fd[1]);
-            close(fd[1]);
-            close(fd[0]);
-            execl(argv[1], argv[1], NULL);
-
-        }
-
-        if (pid == 0) // processo filho
-        {
-            pipe(fd[0]);
-            close(STDIN_FILENO);
-            dup(fd[0]);
-            close(fd[0]);
-            close(fd[1]);
-            execl(argv[2], argv[2], NULL);
-        }
-    }
-    printf("Adeus!\n");
-    exit(1);*/
-
-    // fichaUtente(especialidade, prioridade, nUtentes, nEspecialistas);
-    // criaUtente();
-    // respondeMedico();
-
-    return 0;
+    exit(1);
 }

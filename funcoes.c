@@ -1,6 +1,6 @@
-#include "medico.h"
-#include "cliente.h"
 #include "balcao.h"
+#include "cliente.h"
+#include "medico.h"
 
 void quit()
 {
@@ -155,64 +155,209 @@ void shutdown(int pid)
     sleep(3);
 }
 
-char comandos()
+void *pipeCliente()
 {
+    char nfd;
+    fd_set read_fds;
+    struct timeval tv;
+    char varSair[100];
+    cliente ctl;
+    dataMSG mensagem;
+
+    int fdRecebeCtl = open(SERVER_FIFO, O_RDONLY);
+    if (fdRecebeCtl == -1)
+    {
+        printf("Erro1ctl!\n");
+        exit(1);
+    }
+    do
+    {
+        printf("Ola entrei cliente\n");
+        /*tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        FD_ZERO(&read_fds);
+        FD_SET(0, &read_fds);
+        FD_SET(fdRecebeCtl, &read_fds);
+        nfd = select(fdRecebeCtl + 1, &read_fds, NULL, NULL, &tv);
+        if (nfd == 0)
+        {
+            printf("\nA aguardar informacao... \n");
+        }
+        if (FD_ISSET(0, &read_fds))
+        {
+            fgets(varSair, 99, stdin);
+            if (strcmp(varSair, "encerra\n") == 0)
+            {
+                encerraServidor(fdRecebeCtl, SERVER_FIFO);
+            }
+            else
+            {
+                printf("Comando invalido\n");
+            }
+        }*/
+
+        
+            int size = read(fdRecebeCtl, &mensagem, sizeof(mensagem));
+            if (size > 0)
+            {
+                printf("Cliente [%5d] - %s", mensagem.pid, mensagem.msg);
+                printf("\n");
+                // Por implementar o envio para o Medico
+
+                // strcpy(resposta.res, "Mensagem do medico"); // A mensagem que recebe e a resposta do medico
+
+                sprintf(CLIENTE_FIFO_FINAL, CLIENTE_FIFO, mensagem.pid);
+                printf("\n%s\n", CLIENTE_FIFO_FINAL);
+                int fdRecebeCtl = open(CLIENTE_FIFO_FINAL, O_WRONLY);
+                if (fdRecebeCtl == -1 && strcmp(mensagem.msg, "adeus") != 0)
+                {
+                    printf("fdRecebe = %d\n", fdRecebeCtl);
+                    printf("Erro2ctl!\n");
+                }
+                int size2 = write(fdRecebeCtl, &mensagem, sizeof(mensagem));
+                close(fdRecebeCtl);
+                fflush(stdin);
+            }
+        
+    } while (1);
+    classificador();
+    printf("Especialidade: %s | Prioridade %d\n", ctl.especialidade, ctl.prioridade);
+    encerraServidor(fdRecebeCtl, SERVER_FIFO);
+    pthread_exit(NULL);
+}
+
+void *pipeMedico()
+{
+    printf("Ola entrei medico\n");
+    char nfd;
+    fd_set read_fds;
+    struct timeval tv;
+    char varSair[100];
+    dataMSG mensagem;
+
+    int fdRecebeMdc = open(SERVER_FIFO, O_RDONLY);
+    if (fdRecebeMdc == -1)
+    {
+        printf("Erro1mdc!\n");
+        exit(1);
+    }
+    do
+    {
+        /*tv.tv_sec = 10;
+        tv.tv_usec = 0;
+        FD_ZERO(&read_fds);
+        FD_SET(0, &read_fds);
+        FD_SET(fdRecebeMdc, &read_fds);
+        nfd = select(fdRecebeMdc + 1, &read_fds, NULL, NULL, &tv);
+        if (nfd == 0)
+        {
+            printf("\nA aguardar informacao... \n");
+        }
+        if (FD_ISSET(0, &read_fds))
+        {
+            fgets(varSair, 99, stdin);
+            if (strcmp(varSair, "encerra\n") == 0)
+            {
+                encerraServidor(fdRecebeMdc, SERVER_FIFO);
+            }
+            else
+            {
+                printf("Comando invalido\n");
+            }
+        }*/
+
+        
+            int size = read(fdRecebeMdc, &mensagem, sizeof(mensagem));
+            if (size > 0)
+            {
+                printf("Medico [%5d] - %s", mensagem.pid, mensagem.msg);
+                printf("\n");
+                // Por implementar o envio para o Medico
+
+                // strcpy(resposta.res, "Mensagem do medico"); // A mensagem que recebe e a resposta do medico
+
+                sprintf(MEDICO_FIFO_FINAL, MEDICO_FIFO, mensagem.pid);
+                printf("\n%s\n", MEDICO_FIFO_FINAL);
+                int fdRecebeMdc = open(MEDICO_FIFO_FINAL, O_WRONLY);
+                if (fdRecebeMdc == -1 && strcmp(mensagem.msg, "adeus") != 0)
+                {
+                    printf("fdRecebe = %d\n", fdRecebeMdc);
+                    printf("Erro2mdc!\n");
+                }
+                int size2 = write(fdRecebeMdc, &mensagem, sizeof(mensagem));
+                close(fdRecebeMdc);
+                fflush(stdin);
+            }
+    } while (1);
+    encerraServidor(fdRecebeMdc, SERVER_FIFO);
+    pthread_exit(NULL);
+}
+
+void *comandos()
+{
+    char nfd;
+    fd_set read_fds;
+    struct timeval tv;
     char comando[50], cmd[15], argum[30];
     int pid = getpid();
+    FD_ZERO(&read_fds);
+    FD_SET(0, &read_fds);
 
-    while (1)
+    do 
     {
-
         printf("[%5d]COMANDO: ", pid);
-        scanf("%49[^\n]", comando);
+        if (FD_ISSET(0, &read_fds))
+        {
+            fgets(comando, 100, stdin);
+        }
         sscanf(comando, "%14s %29[^\n]", cmd, argum);
 
-        //Chama classificador
+        // Chama classificador
 
-        if(strcmp(cmd, "classificador") == 0)
+        if (strcmp(cmd, "classificador") == 0)
         {
             classificador();
         }
 
-        //Lista Utentes
-        if (strcmp(cmd, "utentes") == 0)
+        // Lista Utentes
+        else if (strcmp(cmd, "utentes") == 0)
         {
-            //utentes(); //fazer funcao utentes!
+            utentes(); //fazer funcao utentes!
         }
 
-        //Lista Especialistas
+        // Lista Especialistas
         else if (strcmp(cmd, "especialistas") == 0)
         {
-            //especialistas(); //fazer funcao especialistas!
+            especialistas(); //fazer funcao especialistas!
         }
 
         // Remove Utente
         else if (strcmp(cmd, "delut %c") == 0)
         {
-           //delut(); //fazer funcao delut!
+            delut(); //fazer funcao delut!
         }
 
-        //Remove Especialista
+        // Remove Especialista
         else if (strcmp(cmd, "delesp %c") == 0)
         {
-            //delesp(); //fazer funcao delesp!
+            delesp(); //fazer funcao delesp!
         }
 
-        //Frequencia de refrescamento
+        // Frequencia de refrescamento
         else if (strcmp(cmd, "freq %d") == 0)
         {
-            //freq(); //fazer funcao freq!
+            freq(); //fazer funcao freq!
         }
 
         else if (strcmp(cmd, "encerra") == 0)
         {
-            signal(SIGALRM, shutdown);
-            //encerraSistema();//Necessário avisar os clientes, médicos e classificador!
+            signal(SIGALRM, shutdown); //not working?
+            encerraSistema();//Necessário avisar os clientes, médicos e classificador!
             printf("SISTEMA MEDICALSO TERMINADO\n");
         }
-
-        fflush(stdout);
-        pthread_exit(NULL);
-        sleep(1);
     }
+    while(1);
+    fflush(stdout);
+    pthread_exit(NULL);
+    sleep(1);
 }

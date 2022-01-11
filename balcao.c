@@ -12,13 +12,14 @@ void *pipeCliente(){
     fd_set read_fds;
     struct timeval tv;
     char varSair[100];
+    cliente ctl;
     dataMSGCTL perguntaCTL;
     dataRPLCTL respostaCTL;
 
     int fdRecebeCtl = open(SERVER_FIFO, O_RDWR);
     if (fdRecebeCtl == -1)
     {
-        printf("Erro!\n");
+        printf("Erro1ctl!\n");
         exit(1);
     }
     do
@@ -62,13 +63,16 @@ void *pipeCliente(){
                 int fdRecebeCtl = open(CLIENTE_FIFO_FINAL, O_WRONLY);
                 if (fdRecebeCtl == -1 && strcmp(perguntaCTL.msg, "adeus") != 0)
                 {
-                    printf("Erro!\n");
+                    printf("fdRecebe = %d\n", fdRecebeCtl);
+                    printf("Erro2ctl!\n");
                 }
                 int size2 = write(fdRecebeCtl, &respostaCTL, sizeof(respostaCTL));
                 close(fdRecebeCtl);
             }
         }
     } while (1);
+    classificador();
+    printf("Especialidade: %s | Prioridade %d\n", ctl.especialidade, ctl.prioridade);
     encerraServidor(fdRecebeCtl, SERVER_FIFO);
     pthread_exit(NULL);
 }
@@ -84,7 +88,7 @@ void *pipeMedico(){
     int fdRecebeMdc = open(SERVER_FIFO, O_RDWR);
     if (fdRecebeMdc == -1)
     {
-        printf("Erro!\n");
+        printf("Erro1mdc!\n");
         exit(1);
     }
     do
@@ -128,7 +132,8 @@ void *pipeMedico(){
                 int fdRecebeMdc = open(MEDICO_FIFO_FINAL, O_WRONLY);
                 if (fdRecebeMdc == -1 && strcmp(perguntaMDC.msg, "adeus") != 0)
                 {
-                    printf("Erro!\n");
+                    printf("fdRecebe = %d\n", fdRecebeMdc);
+                    printf("Erro2mdc!\n");
                 }
                 int size2 = write(fdRecebeMdc, &respostaMDC, sizeof(respostaMDC));
                 close(fdRecebeMdc);
@@ -147,6 +152,27 @@ int main(int argc, char *argv)
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
     sigaction(SIGINT, &sa, NULL);
 
+    printf("SISTEMA MEDICALSO INICIADO\n");
+
+    //vars ambiente
+    /*int maxClientes = atoi(getenv("MAXCLIENTES"));
+    int maxMedicos = atoi(getenv("MAXCLIENTES"));
+
+    if(getenv("MAXCLIENTES") == NULL)
+    {
+        printf("Variavel de ambiente MAXCLIENTES nao existe!\n");
+        return 0;
+    }
+
+    if(getenv("MAXMEDICOS") == NULL)
+    {
+        printf("Variavel de ambiente MAXMEDICOS nao existe!\n");
+        return 0;
+    }*/
+
+
+    //criação fifo
+
     if (mkfifo(SERVER_FIFO, 0666) == -1)
     {
         if (errno == EEXIST)
@@ -157,8 +183,7 @@ int main(int argc, char *argv)
         return 1;
     }
 
-    printf("SISTEMA MEDICALSO INICIADO\n");
-
+    //criacao de threads
     if(pthread_create(&t[0], NULL, &pipeCliente, NULL) != 0)
     {
         printf("Erro ao criar e lancar a thread do Cliente!");
@@ -173,4 +198,6 @@ int main(int argc, char *argv)
 
     pthread_join(t[0], NULL);
     pthread_join(t[1], NULL);
+
+
 }

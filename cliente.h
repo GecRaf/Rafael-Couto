@@ -22,6 +22,8 @@ typedef struct
 {
 	char nome[100];
 	char sintomas[100];
+	char especialidade[100];
+	int prioridade;
 }cliente;
 
 typedef struct 
@@ -34,18 +36,5 @@ typedef struct
 {
 	char res[100];
 }dataRPLCTL;
-
-// Codigo Meta 1
-
-void encerraServidor(int fd, char *nameFIFO)
-{
-    printf("Adeus!\n");
-    close(fd);
-    unlink(nameFIFO);
-    exit(1);
-}
-//char criaUtente();
-//char fichaUtente(char *especialidade, char *prioridade, int nUtentes, int nEspecialistas);
-//char respondeMedico();
 
 #endif

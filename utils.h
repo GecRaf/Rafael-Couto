@@ -1,9 +1,9 @@
-#ifndef BALCAO_H
-#define BALCAO_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #define SERVER_FIFO "SERVIDOR"
 #define CLIENTE_FIFO "CLIENTE[%d]"
-#define MEDICO_FIFO "MEDICO [%d]"
+#define MEDICO_FIFO "MEDICO[%d]"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,12 +19,25 @@
 #include <pthread.h>
 #include <errno.h>
 #include <stdbool.h>
-#include "funcoes.c"
-#include "cliente.h"
-#include "medico.h"
 
-char CLIENTE_FIFO_FINAL[100];
-char MEDICO_FIFO_FINAL[100];
+//char CLIENTE_FIFO_FINAL[100];
+//char MEDICO_FIFO_FINAL[100];
+
+typedef struct {
+	char nome[100];
+	char sintomas[100];
+	char especialidade[100];
+	char CLIENTE_FIFO_FINAL[100];
+	int  prioridade;
+	pid_t pid;
+}cliente;
+
+typedef struct{
+	char nome[100];
+	char especialidade[100];
+	char MEDICO_FIFO_FINAL[100];
+	pid_t pid;
+}medico;
 
 typedef struct{
 	pid_t pid;
@@ -35,7 +48,15 @@ typedef struct {
 	char nome[100];
 	cliente clt;
 	medico mdc;
+	dataMSG mensagem;
 	bool userType; // true = cliente || false = medico
+	pid_t pidAdm;
 }administrador;
+
+void *pipeCliente();
+void *pipeMedico();
+void *userType();
+void *comandos();
+void encerraServidor();
 
 #endif

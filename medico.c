@@ -1,11 +1,45 @@
-#include "medico.h"
+#include "utils.h"
+
+administrador adm;
 
 void handler_sigalrm(int s, siginfo_t *i, void *v)
 {
     unlink(MEDICO_FIFO);
-    unlink(MEDICO_FIFO_FINAL);
+    unlink(adm.mdc.MEDICO_FIFO_FINAL);
     printf("\nAdeus\n");
     exit(1);
+}
+
+void *leitura(void *args)
+{
+    printf("Nome fifo: %s", adm.mdc.MEDICO_FIFO_FINAL);
+    char buffer[100];
+    do
+    {
+        int fd_read = open(adm.mdc.MEDICO_FIFO_FINAL, O_RDONLY | O_NONBLOCK);
+        int size = read(fd_read, &buffer, sizeof(buffer));
+        if (size > 0)
+        {
+            close(fd_read);
+            printf("Medico [%5d] - Mensagem: %s", adm.mdc.pid, buffer);
+            strcpy(buffer, "");
+        }
+    } while (1);
+}
+
+void *escrita(void *args)
+{
+    printf("Nome fifo: %s\n", adm.clt.CLIENTE_FIFO_FINAL);
+    do
+    {
+        printf("Medico [%5d] - Mensagem: ", adm.mdc.pid);
+        fgets(adm.mensagem.msg, 100, stdin);
+        if (strcmp(adm.mensagem.msg, "adeus") == 0)
+            printf("fazer cebas");
+        int fd_write = open(adm.clt.CLIENTE_FIFO_FINAL, O_WRONLY);
+        int size = write(fd_write, &adm.mensagem.msg, sizeof(adm.mensagem.msg));
+        close(fd_write);
+    } while (1);
 }
 
 int main(int argc, char *argv[])
@@ -17,12 +51,13 @@ int main(int argc, char *argv[])
     sigaction(SIGINT, &sa, NULL);
     dataMSG mensagem;
     medico mdc;
-    administrador adm;
     int fd_envio, fd_resposta;
-    mensagem.pid = getpid();
+    adm.userType = false;
+    adm.mdc.pid = getpid();
+    pthread_t t;
 
-    sprintf(MEDICO_FIFO_FINAL, MEDICO_FIFO, getpid());
-    if (mkfifo(MEDICO_FIFO_FINAL, 0666) == -1)
+    sprintf(adm.mdc.MEDICO_FIFO_FINAL, MEDICO_FIFO, getpid());
+    if (mkfifo(adm.mdc.MEDICO_FIFO_FINAL, 0666) == -1)
     {
         if (errno == EEXIST)
         {
@@ -32,7 +67,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // printf("Cliente [%5d]\n", pergunta.pid); //Maybe not necessary
     printf("\nBem-vindo ao sistema MEDICALso!\n");
     printf("Nome de Medico: ");
     fflush(stdin);
@@ -43,20 +77,23 @@ int main(int argc, char *argv[])
     fgets(mdc.especialidade, 100, stdin);
     printf("\n");
 
-    adm.userType = false;
-    adm.mdc = mdc;
+    strcpy(adm.mdc.nome, mdc.nome);
+    strcpy(adm.mdc.especialidade, mdc.especialidade);
 
     int fd_balcao = open(SERVER_FIFO, O_WRONLY);
     int size = write(fd_balcao, &adm, sizeof(adm));
     close(fd_balcao);
+
+    int fd_read = open(adm.clt.CLIENTE_FIFO_FINAL, O_RDONLY);
+    int size2 = read(fd_read, &adm.clt, sizeof(adm.clt));
     
-    do
+    /*do
     {
         fd_set read_fds;
         FD_ZERO(&read_fds);
         FD_SET(0, &read_fds);
         
-        fd_balcao = open(SERVER_FIFO, O_RDONLY);
+        fd_balcao = open(SERVER_FIFO, O_RDONLY | O_NONBLOCK);
         int size2 = read(fd_balcao, &adm.clt, sizeof(&adm.clt));
         if (size2 > 0)
         {
@@ -64,33 +101,33 @@ int main(int argc, char *argv[])
             {
                 fflush(stdin);
                 printf("\n");
-                printf("Medico [%5d] - Mensagem: ", mensagem.pid);
-                fgets(mensagem.msg, 100, stdin);
-                if(strcmp(mensagem.msg, "sair"))
+                printf("Medico [%5d] - Mensagem: ", adm.mdc.pid);
+                fgets(adm.mensagem.msg, 100, stdin);
+                if(strcmp(adm.mensagem.msg, "sair"))
                 {
-                    strcpy(varSair, mensagem.msg);
+                    strcpy(varSair, adm.mensagem.msg);
                     break;
                 }
-                if (strcmp(mensagem.msg, "adeus") != 0)
+                if (strcmp(adm.mensagem.msg, "adeus") != 0)
                 {
                     fd_envio = open(CLIENTE_FIFO, O_WRONLY);
-                    int size = write(fd_envio, &mensagem, sizeof(mensagem));
+                    int size = write(fd_envio, &adm.mensagem, sizeof(adm.mensagem));
                     close(fd_envio);
-                    fd_resposta = open(MEDICO_FIFO_FINAL, O_RDONLY);
-                    int size2 = read(fd_resposta, &mensagem, sizeof(mensagem));
+                    fd_resposta = open(adm.mdc.MEDICO_FIFO_FINAL, O_RDONLY);
+                    int size2 = read(fd_resposta, &adm.mensagem, sizeof(adm.mensagem));
                     if (size2 > 0)
                     {
                         close(fd_resposta);
-                        printf("\nResposta: %s\n", mensagem.msg); //%s?
+                        printf("\nResposta: %s\n", adm.mensagem.msg); //%s?
                     }
                 }
                 else
                 {
-                    strcpy(mensagem.msg, "A consulta terminou!\n");
+                    strcpy(adm.mensagem.msg, "A consulta terminou!\n");
                     fd_envio = open(SERVER_FIFO, O_WRONLY);
-                    int size = write(fd_envio, &mensagem, sizeof(mensagem));
+                    int size = write(fd_envio, &adm.mensagem, sizeof(adm.mensagem));
                     close(fd_envio);
-                    unlink(MEDICO_FIFO_FINAL);
+                    unlink(adm.mdc.MEDICO_FIFO_FINAL);
                     break; // como dar unlink aos dois fifos com o encerraServidor
                 }
             } while (1);
@@ -100,8 +137,22 @@ int main(int argc, char *argv[])
             fgets(varSair, 100, stdin);
         }
         
-    } while (strcmp(varSair, "sair") != 0);
+    } while (strcmp(varSair, "sair") != 0);*/
 
-    unlink(MEDICO_FIFO_FINAL);
+    if(pthread_create(&t, NULL, &escrita, NULL))
+    {
+        printf("Erro ao criar e lancar a thread de escrita!");
+        exit(-1);
+    }
+
+    if(pthread_create(&t, NULL, &leitura, NULL))
+    {
+        printf("Erro ao criar e lancar a thread de leitura!");
+        exit(-1);
+    }
+
+    pthread_join(t, NULL);
+
+    unlink(adm.mdc.MEDICO_FIFO_FINAL);
     close(fd_balcao);
 }

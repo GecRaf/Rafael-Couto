@@ -1,4 +1,4 @@
-#include "balcao.h"
+#include "utils.h"
 
 void handler_sigalrm(int s, siginfo_t *i, void *v)
 {
@@ -9,16 +9,18 @@ void handler_sigalrm(int s, siginfo_t *i, void *v)
 
 int main(int argc, char *argv)
 {
-    pthread_t t[3];
+    pthread_t t;
     struct sigaction sa;
     sa.sa_sigaction = handler_sigalrm;
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
     sigaction(SIGINT, &sa, NULL);
+    administrador adm;
+    adm.pidAdm = getpid();
 
     printf("SISTEMA MEDICALSO INICIADO\n");
 
     //vars ambiente
-    int maxClientes = atoi(getenv("MAXCLIENTES"));
+    /*int maxClientes = atoi(getenv("MAXCLIENTES"));
     int maxMedicos = atoi(getenv("MAXCLIENTES"));
 
     if(getenv("MAXCLIENTES") == NULL)
@@ -31,8 +33,7 @@ int main(int argc, char *argv)
     {
         printf("Variavel de ambiente MAXMEDICOS nao existe!\n");
         return 0;
-    }
-
+    }*/
 
     //criação fifo
 
@@ -46,33 +47,49 @@ int main(int argc, char *argv)
         return 1;
     }
 
-    //criacao de threads
-    if(pthread_create(&t[0], NULL, &pipeCliente, NULL) != 0)
-    {
-        printf("Erro ao criar e lancar a thread do Cliente!");
-        exit(-1);
-    }
-
-    if(pthread_create(&t[1], NULL, &pipeMedico, NULL) != 0)
-    {
-        printf("Erro ao criar e lancar a thread do Medico!\n");
-        exit(-1);
-    }
-
-    if(pthread_create(&t[2], NULL, &comandos, NULL) != 0)
+    if (pthread_create(&t, NULL, &comandos, NULL) != 0)
     {
         printf("Erro ao criar e lancar a thread do Comandos!\n");
         exit(-1);
     }
 
-    int fdRecebeMdc = open(SERVER_FIFO, O_RDONLY);
-    if (fdRecebeMdc == -1)
+    int fd_read = open(SERVER_FIFO, O_RDONLY | O_NONBLOCK);
+    if (fd_read == -1)
     {
-        printf("Erro1mdc!\n");
+        printf("Erro ao abrir o fifo!\n");
         exit(1);
     }
 
-    pthread_join(t[0], NULL);
-    pthread_join(t[1], NULL);
-    pthread_join(t[2], NULL);
+    
+    do
+    {
+        int size = read(fd_read, &adm, sizeof(adm));
+        if (size > 0)
+        {
+            if (adm.userType == true)
+            {
+                int fd_write = open(adm.mdc.MEDICO_FIFO_FINAL, O_WRONLY);
+                int size2 = write(fd_write, &adm.clt, sizeof(adm.clt));
+                printf("Entrei cliente!\n");
+                if (pthread_create(&t, NULL, &pipeCliente, NULL) != 0)
+                {
+                    printf("Erro ao criar e lancar a thread do Cliente!");
+                    exit(-1);
+                }
+            }
+            else
+            {
+                int fd_write2 = open(adm.clt.CLIENTE_FIFO_FINAL, O_WRONLY);
+                int size3 = write(fd_write2, &adm.mdc, sizeof(adm.mdc));
+                printf("Entrei medico!\n");
+                if (pthread_create(&t, NULL, &pipeMedico, NULL) != 0)
+                {
+                    printf("Erro ao criar e lancar a thread do Medico!\n");
+                    exit(-1);
+                }
+            }
+        }
+    } while (1);
+
+    pthread_join(t, NULL);
 }

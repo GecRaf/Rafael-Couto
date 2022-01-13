@@ -190,6 +190,7 @@ void *pipeCliente()
             }
         
     } while (1);
+    close(fdRecebeCtl);
     classificador();
     printf("Especialidade: %s | Prioridade %d\n", clt.especialidade, clt.prioridade);
     encerraServidor(fdRecebeCtl, SERVER_FIFO);
@@ -230,6 +231,7 @@ void *pipeMedico()
                 fflush(stdin);
             }
     } while (1);
+    close(fdRecebeMdc);
     encerraServidor(fdRecebeMdc, SERVER_FIFO);
     pthread_exit(NULL);
 }

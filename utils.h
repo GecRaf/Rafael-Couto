@@ -1,6 +1,10 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+
+
+#define Read_Cli "TMP1"
+#define Write_Cli "TMP2"
 #define SERVER_FIFO "SERVIDOR"
 #define CLIENTE_FIFO "CLIENTE[%d]"
 #define MEDICO_FIFO "MEDICO[%d]"
@@ -29,6 +33,7 @@ typedef struct {
 	char especialidade[100];
 	char CLIENTE_FIFO_FINAL[100];
 	int  prioridade;
+	int flag; // 0 - Fechado || 1 - Aberto
 	pid_t pid;
 }cliente;
 
@@ -36,6 +41,7 @@ typedef struct{
 	char nome[100];
 	char especialidade[100];
 	char MEDICO_FIFO_FINAL[100];
+	int flag;
 	pid_t pid;
 }medico;
 

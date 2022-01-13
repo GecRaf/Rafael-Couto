@@ -12,7 +12,7 @@ void handler_sigalrm(int s, siginfo_t *i, void *v)
 
 void *leitura(void *args)
 {
-    printf("Nome fifo: %s", adm.clt.CLIENTE_FIFO_FINAL);
+    printf("\n Fifo leitura: %s\n", adm.clt.CLIENTE_FIFO_FINAL);
     char buffer[100];
     do
     {
@@ -29,7 +29,7 @@ void *leitura(void *args)
 
 void *escrita(void *args)
 {
-    printf("Nome fifo: %s\n", adm.mdc.MEDICO_FIFO_FINAL);
+    printf("\nFifo escrita: %s\n", adm.mdc.MEDICO_FIFO_FINAL);
     do
     {
         printf("Cliente [%5d] - Mensagem: ", adm.clt.pid);
@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     cliente clt;
     int fd_envio, fd_resposta;
     adm.userType = true;
+    adm.clt.flag = 1;
     adm.clt.pid = getpid();
     pthread_t t;
 
@@ -76,16 +77,16 @@ int main(int argc, char *argv[])
     fgets(clt.sintomas, 100, stdin);
     printf("\n");
 
-    strcpy(adm.clt.nome, clt.nome);
-    strcpy(adm.clt.sintomas, clt.sintomas);
+    //strcpy(adm.clt.nome, clt.nome);
+    //strcpy(adm.clt.sintomas, clt.sintomas);
 
     int fd_balcao = open(SERVER_FIFO, O_WRONLY);
-    int size = write(fd_balcao, &adm, sizeof(adm));
+    int size = write(fd_balcao, &clt, sizeof(clt));
     close(fd_balcao);
-
-    int fd_read = open(adm.clt.CLIENTE_FIFO_FINAL, O_RDONLY);
-    int size2 = read(fd_read, &adm.clt, sizeof(adm.clt));
-
+    printf("Babuino\n");
+    //int fd_read = open(adm.clt.CLIENTE_FIFO_FINAL, O_RDONLY);
+    //int size2 = read(fd_read, &adm.mdc, sizeof(adm.mdc));
+    printf("Alberto\n");
     if(pthread_create(&t, NULL, &escrita, NULL))
     {
         printf("Erro ao criar e lancar a thread de escrita!");
@@ -98,7 +99,8 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    pthread_join(t, NULL);
+    if(pthread_join(t, NULL) == -1)
+        exit(-1);
 
     /*do
     {
@@ -119,7 +121,7 @@ int main(int argc, char *argv[])
             printf("\nResposta: %s\n", adm.mensagem.msg);
         }
     } while (1);*/
-
+    //close(fd_read);
     close(fd_envio);
     unlink(adm.clt.CLIENTE_FIFO_FINAL);
     exit(1);

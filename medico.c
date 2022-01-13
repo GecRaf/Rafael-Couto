@@ -12,7 +12,7 @@ void handler_sigalrm(int s, siginfo_t *i, void *v)
 
 void *leitura(void *args)
 {
-    printf("Nome fifo: %s", adm.mdc.MEDICO_FIFO_FINAL);
+    printf("\nFifo leitura: %s\n", adm.mdc.MEDICO_FIFO_FINAL);
     char buffer[100];
     do
     {
@@ -29,7 +29,7 @@ void *leitura(void *args)
 
 void *escrita(void *args)
 {
-    printf("Nome fifo: %s\n", adm.clt.CLIENTE_FIFO_FINAL);
+    printf("\nFifo escrita: %s\n", adm.clt.CLIENTE_FIFO_FINAL);
     do
     {
         printf("Medico [%5d] - Mensagem: ", adm.mdc.pid);
@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
     medico mdc;
     int fd_envio, fd_resposta;
     adm.userType = false;
+    adm.mdc.flag = 1;
     adm.mdc.pid = getpid();
     pthread_t t;
 
@@ -77,15 +78,16 @@ int main(int argc, char *argv[])
     fgets(mdc.especialidade, 100, stdin);
     printf("\n");
 
-    strcpy(adm.mdc.nome, mdc.nome);
-    strcpy(adm.mdc.especialidade, mdc.especialidade);
+    //strcpy(adm.mdc.nome, mdc.nome);
+    //strcpy(adm.mdc.especialidade, mdc.especialidade);
 
     int fd_balcao = open(SERVER_FIFO, O_WRONLY);
-    int size = write(fd_balcao, &adm, sizeof(adm));
+    int size = write(fd_balcao, &mdc, sizeof(mdc));
     close(fd_balcao);
-
-    int fd_read = open(adm.clt.CLIENTE_FIFO_FINAL, O_RDONLY);
-    int size2 = read(fd_read, &adm.clt, sizeof(adm.clt));
+    printf("galinha\n");
+    //int fd_read = open(adm.mdc.MEDICO_FIFO_FINAL, O_RDONLY);
+    //int size2 = read(fd_read, &adm.clt, sizeof(adm.clt));
+    printf("maiu\n");
     
     /*do
     {
@@ -152,7 +154,7 @@ int main(int argc, char *argv[])
     }
 
     pthread_join(t, NULL);
-
     unlink(adm.mdc.MEDICO_FIFO_FINAL);
+    //close(fd_read);
     close(fd_balcao);
 }

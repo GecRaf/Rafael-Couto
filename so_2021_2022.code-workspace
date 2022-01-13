@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../aulasSO"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"balcao.h": "c",
+			"fcntl.h": "c",
+			"stat.h": "c",
+			"medico.h": "c",
+			"cliente.h": "c",
+			"stdlib.h": "c"
+		}
+	}
+}
